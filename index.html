@@ -3,94 +3,176 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#090e1b">
-  <meta name="description" content="ATMOS — современное приложение погоды">
-  <title>ATMOS — Weather</title>
+  <title>ATMOS — Weather Experience</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <a class="logo" href="#">ATMOS<span>.</span></a>
-      <div class="header-actions">
-        <button id="locationBtn" class="icon-btn" aria-label="Моё местоположение">⌖</button>
-        <button id="unitBtn" class="unit-btn">°C</button>
+<div class="app">
+  <header class="topbar">
+    <a class="logo" href="#">ATMOS<span>.</span></a>
+    <div class="header-actions">
+      <button id="locationBtn" class="icon-btn">⌖</button>
+      <button id="unitBtn" class="unit-btn">°C</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="subscription">
+      <div class="sub-content">
+        <div class="premium-label">✦ ATMOS PREMIUM</div>
+        <h1>Погода.<br>Без ограничений.</h1>
+        <p>Максимум информации, эксклюзивные функции и персональный прогноз.</p>
+        <div class="sub-price">6 599 ₽ <span>/ подписка</span></div>
+        <button id="subscribeBtn" class="premium-btn">Оформить подписку <span>↗</span></button>
+        <small>Демонстрационное предложение · Без автоматического списания</small>
       </div>
-    </header>
+      <div class="premium-art">✦</div>
+    </section>
 
-    <main>
-      <section class="search-wrap">
-        <div class="search-box">
-          <span>⌕</span>
-          <input id="cityInput" type="search" placeholder="Поиск города..." autocomplete="off">
-          <button id="searchBtn">Найти</button>
-        </div>
-        <div id="searchResults" class="search-results"></div>
-      </section>
+    <section class="search-wrap">
+      <div class="search-box">
+        <span>⌕</span>
+        <input id="cityInput" placeholder="Найти город..." autocomplete="off">
+        <button id="searchBtn">Найти</button>
+      </div>
+      <div id="searchResults" class="search-results"></div>
+    </section>
 
-      <section class="hero">
-        <div class="hero-top">
-          <div>
-            <div class="eyebrow">ТЕКУЩАЯ ПОГОДА</div>
-            <h1 id="cityName">Загрузка...</h1>
-            <p id="currentDate">Получаем данные</p>
-          </div>
-          <div id="weatherIcon" class="weather-icon">☀️</div>
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow">ТЕКУЩАЯ ПОГОДА</div>
+          <h2 id="cityName">Загрузка...</h2>
+          <p id="currentDate">Получаем данные</p>
         </div>
+        <div id="weatherIcon" class="weather-icon">☀️</div>
+      </div>
+      <div class="temperature">
+        <span id="temperature">--</span><span class="degree">°</span>
+      </div>
+      <div id="weatherDescription" class="weather-description">Загрузка...</div>
+      <div class="hero-divider"></div>
+      <div class="weather-stats">
+        <div class="stat"><span>💧</span><div><small>Влажность</small><strong id="humidity">--%</strong></div></div>
+        <div class="stat"><span>💨</span><div><small>Ветер</small><strong id="wind">-- км/ч</strong></div></div>
+        <div class="stat"><span>🌡</span><div><small>Ощущается</small><strong id="feels">--°</strong></div></div>
+      </div>
+    </section>
 
-        <div class="temperature">
-          <span id="temperature">--</span><span class="degree">°</span>
-        </div>
-        <div id="weatherDescription" class="weather-description">Загрузка погоды...</div>
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">БЛИЖАЙШЕЕ ВРЕМЯ</div><h2>Почасовой прогноз</h2></div>
+      <div id="hourlyForecast" class="hourly-list"></div>
+    </section>
 
-        <div class="hero-divider"></div>
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">НА НЕДЕЛЮ</div><h2>Прогноз на 7 дней</h2></div>
+      <div id="dailyForecast" class="daily-list"></div>
+    </section>
 
-        <div class="weather-stats">
-          <div class="stat">
-            <span class="stat-icon">💧</span>
-            <div><small>Влажность</small><strong id="humidity">--%</strong></div>
-          </div>
-          <div class="stat">
-            <span class="stat-icon">💨</span>
-            <div><small>Ветер</small><strong id="wind">-- км/ч</strong></div>
-          </div>
-          <div class="stat">
-            <span class="stat-icon">🌡</span>
-            <div><small>Ощущается</small><strong id="feels">--°</strong></div>
-          </div>
-        </div>
-      </section>
+    <section class="ad-card">
+      <div class="ad-top"><span>РЕКЛАМА</span><span>ПРЕДЛОЖЕНИЕ ДНЯ</span></div>
+      <div class="ad-icon" id="adIcon">✈</div>
+      <div class="ad-title" id="adTitle">Открой новые возможности</div>
+      <p id="adText">Специальное предложение для пользователей ATMOS.</p>
+      <button id="adBtn" class="secondary-btn">Подробнее ↗</button>
+    </section>
 
-      <section class="section">
-        <div class="section-heading">
-          <div><span class="eyebrow">БЛИЖАЙШЕЕ ВРЕМЯ</span><h2>Почасовой прогноз</h2></div>
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">ТВОЁ МНЕНИЕ</div><h2>Какая погода на улице?</h2></div>
+      <div class="feedback-card">
+        <p>Насколько погода соответствует прогнозу?</p>
+        <div class="rating-buttons" id="weatherRating">
+          <button data-rating="1">😫</button>
+          <button data-rating="2">😕</button>
+          <button data-rating="3">😐</button>
+          <button data-rating="4">🙂</button>
+          <button data-rating="5">😍</button>
         </div>
-        <div id="hourlyForecast" class="hourly-list">
-          <div class="loading">Загрузка прогноза...</div>
+        <p class="muted">Сообщи, что происходит на улице:</p>
+        <div class="weather-tags" id="weatherTags">
+          <button data-tag="Идёт дождь">🌧 Дождь</button>
+          <button data-tag="Идёт снег">❄️ Снег</button>
+          <button data-tag="Сильный ветер">💨 Ветер</button>
+          <button data-tag="Ясно">☀️ Ясно</button>
+          <button data-tag="Облачность">☁️ Облачно</button>
+          <button data-tag="Гололёд">🧊 Гололёд</button>
         </div>
-      </section>
+        <textarea id="weatherComment" placeholder="Дополнительная информация..."></textarea>
+        <button id="sendWeather" class="primary-btn">Отправить наблюдение</button>
+        <p id="feedbackStatus" class="status"></p>
+      </div>
+    </section>
 
-      <section class="section">
-        <div class="section-heading">
-          <div><span class="eyebrow">НА НЕДЕЛЮ</span><h2>Прогноз на 7 дней</h2></div>
-        </div>
-        <div id="dailyForecast" class="daily-list">
-          <div class="loading">Загрузка прогноза...</div>
-        </div>
-      </section>
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">ГОРОДСКИЕ СОБЫТИЯ</div><h2>Билеты и мероприятия</h2></div>
+      <div id="eventsList" class="service-list"></div>
+    </section>
 
-      <footer>
-        <span class="logo">ATMOS<span>.</span></span>
-        <p>Weather, in its atmosphere.</p>
-        <small>Weather data by Open-Meteo</small>
-      </footer>
-    </main>
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">ПЕРЕДВИЖЕНИЕ</div><h2>Такси</h2></div>
+      <div class="service-card">
+        <div class="service-icon">🚕</div>
+        <div><h3>Поездка по городу</h3><p>Укажи маршрут и рассчитай примерную стоимость.</p></div>
+        <label>Откуда</label>
+        <input id="taxiFrom" placeholder="Адрес отправления">
+        <label>Куда</label>
+        <input id="taxiTo" placeholder="Адрес назначения">
+        <label>Класс автомобиля</label>
+        <select id="taxiClass">
+          <option value="1">Эконом</option>
+          <option value="1.6">Комфорт</option>
+          <option value="2.5">Бизнес</option>
+        </select>
+        <button id="taxiBtn" class="primary-btn">Рассчитать поездку</button>
+        <div id="taxiResult" class="status"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><div class="eyebrow">ДОСТАВКА</div><h2>Закажи доставку</h2></div>
+      <div class="service-card">
+        <div class="service-icon">📦</div>
+        <h3>Доставка до двери</h3>
+        <p>Оставь заявку на доставку товаров или документов.</p>
+        <label>Что доставить?</label>
+        <select id="deliveryType">
+          <option>Документы</option>
+          <option>Продукты</option>
+          <option>Посылка</option>
+          <option>Еда</option>
+        </select>
+        <label>Адрес доставки</label>
+        <input id="deliveryAddress" placeholder="Укажи адрес">
+        <button id="deliveryBtn" class="primary-btn">Рассчитать доставку</button>
+        <div id="deliveryResult" class="status"></div>
+      </div>
+    </section>
+
+    <footer>
+      <a class="logo" href="#">ATMOS<span>.</span></a>
+      <p>Weather, in its atmosphere.</p>
+      <small>Weather data by Open-Meteo</small>
+      <small>© 2026 ATMOS</small>
+    </footer>
+  </main>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <button id="closeModal" class="close-modal">×</button>
+    <div class="eyebrow">ATMOS</div>
+    <h2 id="modalTitle">Подтверждение</h2>
+    <p id="modalText"></p>
+    <button id="modalAction" class="primary-btn">Продолжить</button>
   </div>
-  <div id="toast" class="toast"></div>
-  <script src="script.js"></script>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="script.js"></script>
 </body>
 </html>
