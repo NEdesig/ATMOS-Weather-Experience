@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090e1b">
+  <meta name="description" content="ATMOS — современное приложение погоды">
+  <title>ATMOS — Weather</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="logo" href="#">ATMOS<span>.</span></a>
+      <div class="header-actions">
+        <button id="locationBtn" class="icon-btn" aria-label="Моё местоположение">⌖</button>
+        <button id="unitBtn" class="unit-btn">°C</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="search-wrap">
+        <div class="search-box">
+          <span>⌕</span>
+          <input id="cityInput" type="search" placeholder="Поиск города..." autocomplete="off">
+          <button id="searchBtn">Найти</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+      </section>
+
+      <section class="hero">
+        <div class="hero-top">
+          <div>
+            <div class="eyebrow">ТЕКУЩАЯ ПОГОДА</div>
+            <h1 id="cityName">Загрузка...</h1>
+            <p id="currentDate">Получаем данные</p>
+          </div>
+          <div id="weatherIcon" class="weather-icon">☀️</div>
+        </div>
+
+        <div class="temperature">
+          <span id="temperature">--</span><span class="degree">°</span>
+        </div>
+        <div id="weatherDescription" class="weather-description">Загрузка погоды...</div>
+
+        <div class="hero-divider"></div>
+
+        <div class="weather-stats">
+          <div class="stat">
+            <span class="stat-icon">💧</span>
+            <div><small>Влажность</small><strong id="humidity">--%</strong></div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">💨</span>
+            <div><small>Ветер</small><strong id="wind">-- км/ч</strong></div>
+          </div>
+          <div class="stat">
+            <span class="stat-icon">🌡</span>
+            <div><small>Ощущается</small><strong id="feels">--°</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <div><span class="eyebrow">БЛИЖАЙШЕЕ ВРЕМЯ</span><h2>Почасовой прогноз</h2></div>
+        </div>
+        <div id="hourlyForecast" class="hourly-list">
+          <div class="loading">Загрузка прогноза...</div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-heading">
+          <div><span class="eyebrow">НА НЕДЕЛЮ</span><h2>Прогноз на 7 дней</h2></div>
+        </div>
+        <div id="dailyForecast" class="daily-list">
+          <div class="loading">Загрузка прогноза...</div>
+        </div>
+      </section>
+
+      <footer>
+        <span class="logo">ATMOS<span>.</span></span>
+        <p>Weather, in its atmosphere.</p>
+        <small>Weather data by Open-Meteo</small>
+      </footer>
+    </main>
+  </div>
+  <div id="toast" class="toast"></div>
+  <script src="script.js"></script>
+</body>
+</html>
