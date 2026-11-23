@@ -2,253 +2,170 @@
 const API = "https://api.open-meteo.com/v1/forecast";
 const GEO = "https://geocoding-api.open-meteo.com/v1/search";
 
-let currentCity = {
+let city = {
   name: "Москва",
-  country: "Россия",
   latitude: 55.7558,
   longitude: 37.6173
 };
 
-let weatherData = null;
+let weather = null;
 let celsius = true;
+let rating = 0;
+let selectedTags = [];
 
 const $ = id => document.getElementById(id);
 
-function weatherInfo(code) {
-  const conditions = {
-    0: ["Ясное небо", "☀️"],
-    1: ["Преимущественно ясно", "🌤️"],
-    2: ["Переменная облачность", "⛅"],
-    3: ["Пасмурно", "☁️"],
-    45: ["Туман", "🌫️"],
-    48: ["Изморозь и туман", "🌫️"],
-    51: ["Лёгкая морось", "🌦️"],
-    53: ["Морось", "🌦️"],
-    55: ["Сильная морось", "🌧️"],
-    56: ["Ледяная морось", "🌧️"],
-    57: ["Сильная ледяная морось", "🌧️"],
-    61: ["Небольшой дождь", "🌧️"],
-    63: ["Умеренный дождь", "🌧️"],
-    65: ["Сильный дождь", "🌧️"],
-    66: ["Ледяной дождь", "🌧️"],
-    67: ["Сильный ледяной дождь", "🌧️"],
-    71: ["Небольшой снег", "🌨️"],
-    73: ["Снег", "❄️"],
-    75: ["Сильный снегопад", "❄️"],
-    77: ["Снежная крупа", "🌨️"],
-    80: ["Ливневый дождь", "🌦️"],
-    81: ["Сильный ливень", "🌧️"],
-    82: ["Очень сильный ливень", "⛈️"],
-    85: ["Снегопад", "🌨️"],
-    86: ["Сильный снегопад", "❄️"],
-    95: ["Гроза", "⛈️"],
-    96: ["Гроза с градом", "⛈️"],
-    99: ["Сильная гроза с градом", "⛈️"]
-  };
-
-  return conditions[code] || ["Неизвестно", "🌡️"];
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 3000);
 }
 
-function showToast(message) {
-  const toast = $("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-  }, 2800);
-}
-
-function displayTemp(value) {
+function temp(value) {
   return Math.round(celsius ? value : value * 9 / 5 + 32);
 }
 
-function unitLabel() {
+function unit() {
   return celsius ? "°" : "°F";
 }
 
-function formatDay(date, index) {
-  if (index === 0) return "Сегодня";
-  if (index === 1) return "Завтра";
-
-  return new Intl.DateTimeFormat("ru-RU", {
-    weekday: "long"
-  }).format(new Date(date + "T12:00:00"));
+function condition(code) {
+  const data = {
+    0:["Ясно","☀️"],1:["Преимущественно ясно","🌤️"],
+    2:["Переменная облачность","⛅"],3:["Пасмурно","☁️"],
+    45:["Туман","🌫️"],48:["Туман","🌫️"],
+    51:["Морось","🌦️"],53:["Морось","🌦️"],
+    55:["Сильная морось","🌧️"],61:["Небольшой дождь","🌧️"],
+    63:["Дождь","🌧️"],65:["Сильный дождь","🌧️"],
+    71:["Небольшой снег","🌨️"],73:["Снег","❄️"],
+    75:["Сильный снег","❄️"],80:["Ливень","🌦️"],
+    81:["Сильный ливень","🌧️"],82:["Очень сильный ливень","⛈️"],
+    85:["Снегопад","🌨️"],86:["Сильный снегопад","❄️"],
+    95:["Гроза","⛈️"],96:["Гроза с градом","⛈️"],
+    99:["Сильная гроза","⛈️"]
+  };
+  return data[code] || ["Переменная погода","🌡️"];
 }
 
-function formatTime(date) {
-  return date.slice(11, 16);
-}
-
-function formatDate(date) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    weekday: "long",
-    day: "numeric",
-    month: "long"
-  }).format(new Date(date));
+function dateText(value, options) {
+  return new Intl.DateTimeFormat("ru-RU", options).format(new Date(value));
 }
 
 async function loadWeather() {
-  $("cityName").textContent = currentCity.name;
-  $("currentDate").textContent = "Обновляем данные...";
-  $("weatherDescription").textContent = "Загрузка погоды...";
-  $("hourlyForecast").innerHTML =
-    '<div class="loading">Загружаем почасовой прогноз...</div>';
-  $("dailyForecast").innerHTML =
-    '<div class="loading">Загружаем прогноз на неделю...</div>';
+  $("cityName").textContent = city.name;
+  $("weatherDescription").textContent = "Обновление погоды...";
 
   const params = new URLSearchParams({
-    latitude: currentCity.latitude,
-    longitude: currentCity.longitude,
-    current: [
-      "temperature_2m",
-      "relative_humidity_2m",
-      "apparent_temperature",
-      "is_day",
-      "precipitation",
-      "weather_code",
-      "wind_speed_10m"
-    ].join(","),
-    hourly: [
-      "temperature_2m",
-      "precipitation_probability",
-      "weather_code"
-    ].join(","),
-    daily: [
-      "weather_code",
-      "temperature_2m_max",
-      "temperature_2m_min",
-      "precipitation_probability_max"
-    ].join(","),
+    latitude: city.latitude,
+    longitude: city.longitude,
+    current: "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m",
+    hourly: "temperature_2m,precipitation_probability,weather_code",
+    daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
     timezone: "auto",
-    forecast_days: 7,
-    forecast_hours: 24
+    forecast_days: "7",
+    forecast_hours: "24"
   });
 
   try {
     const response = await fetch(`${API}?${params}`);
+    if (!response.ok) throw new Error("API error");
 
-    if (!response.ok) {
-      throw new Error("Ошибка получения данных");
-    }
-
-    weatherData = await response.json();
+    weather = await response.json();
 
     renderCurrent();
     renderHourly();
     renderDaily();
-
   } catch (error) {
     console.error(error);
-    $("weatherDescription").textContent = "Не удалось загрузить погоду";
-    showToast("Ошибка соединения. Попробуй ещё раз.");
+    toast("Не удалось получить погодные данные");
+    $("weatherDescription").textContent = "Ошибка загрузки";
   }
 }
 
 function renderCurrent() {
-  const data = weatherData.current;
-  const info = weatherInfo(data.weather_code);
+  const data = weather.current;
+  const info = condition(data.weather_code);
 
-  $("cityName").textContent = currentCity.name;
-  $("currentDate").textContent = formatDate(data.time);
+  $("cityName").textContent = city.name;
+  $("currentDate").textContent = dateText(data.time, {
+    weekday:"long",day:"numeric",month:"long"
+  });
+
   $("weatherIcon").textContent = info[1];
-  $("temperature").textContent = displayTemp(data.temperature_2m);
+  $("temperature").textContent = temp(data.temperature_2m);
   $("weatherDescription").textContent = info[0];
-
-  $("humidity").textContent = `${data.relative_humidity_2m}%`;
-  $("wind").textContent = `${Math.round(data.wind_speed_10m)} км/ч`;
-  $("feels").textContent =
-    `${displayTemp(data.apparent_temperature)}${unitLabel()}`;
-
-  document.querySelector(".temperature .degree").textContent =
-    unitLabel();
+  $("humidity").textContent = data.relative_humidity_2m + "%";
+  $("wind").textContent = Math.round(data.wind_speed_10m) + " км/ч";
+  $("feels").textContent = temp(data.apparent_temperature) + unit();
+  document.querySelector(".degree").textContent = unit();
 }
 
 function renderHourly() {
-  const hourly = weatherData.hourly;
-  const now = weatherData.current.time;
+  const data = weather.hourly;
+  const now = weather.current.time;
+  let start = data.time.findIndex(t => t >= now);
+  if (start < 0) start = 0;
 
-  let startIndex = hourly.time.findIndex(time => time >= now);
+  $("hourlyForecast").innerHTML =
+    data.time.slice(start, start + 12).map((time, n) => {
+      const i = start + n;
+      const info = condition(data.weather_code[i]);
 
-  if (startIndex < 0) startIndex = 0;
-
-  const items = hourly.time.slice(startIndex, startIndex + 12);
-
-  $("hourlyForecast").innerHTML = items.map((time, index) => {
-    const i = startIndex + index;
-    const info = weatherInfo(hourly.weather_code[i]);
-    const probability =
-      hourly.precipitation_probability[i] ?? 0;
-
-    const label = index === 0 ? "Сейчас" : formatTime(time);
-
-    return `
-      <div class="hour-card ${index === 0 ? "active" : ""}">
-        <small>${label}</small>
-        <div class="icon">${info[1]}</div>
-        <strong>${displayTemp(hourly.temperature_2m[i])}${unitLabel()}</strong>
-        <span class="rain">💧 ${probability}%</span>
-      </div>
-    `;
-  }).join("");
+      return `
+        <div class="hour-card ${n === 0 ? "active" : ""}">
+          <small>${n === 0 ? "Сейчас" : time.slice(11,16)}</small>
+          <div class="icon">${info[1]}</div>
+          <strong>${temp(data.temperature_2m[i])}${unit()}</strong>
+          <span class="rain">💧 ${data.precipitation_probability[i] ?? 0}%</span>
+        </div>`;
+    }).join("");
 }
 
 function renderDaily() {
-  const daily = weatherData.daily;
+  const data = weather.daily;
 
-  $("dailyForecast").innerHTML = daily.time.map((date, i) => {
-    const info = weatherInfo(daily.weather_code[i]);
-    const max = displayTemp(daily.temperature_2m_max[i]);
-    const min = displayTemp(daily.temperature_2m_min[i]);
+  $("dailyForecast").innerHTML = data.time.map((date, i) => {
+    const info = condition(data.weather_code[i]);
+    const day = i === 0 ? "Сегодня" :
+      i === 1 ? "Завтра" :
+      dateText(date + "T12:00:00", {weekday:"long"});
 
     return `
       <div class="day-row">
-        <div class="day-name">${formatDay(date, i)}</div>
+        <div class="day-name">${day}</div>
         <div class="day-icon">${info[1]}</div>
         <div class="day-desc">${info[0]}</div>
         <div class="day-temps">
-          <strong>${max}°</strong>
-          <span>${min}°</span>
+          <strong>${temp(data.temperature_2m_max[i])}°</strong>
+          <span>${temp(data.temperature_2m_min[i])}°</span>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join("");
 }
 
+// ПОИСК ГОРОДОВ
+
 async function searchCity() {
   const query = $("cityInput").value.trim();
-
-  if (query.length < 2) {
-    showToast("Введи название города");
-    return;
-  }
+  if (query.length < 2) return toast("Введи название города");
 
   $("searchBtn").disabled = true;
-  $("searchBtn").textContent = "...";
 
   try {
     const response = await fetch(
       `${GEO}?name=${encodeURIComponent(query)}&count=7&language=ru&format=json`
     );
-
-    if (!response.ok) throw new Error();
-
     const data = await response.json();
 
-    if (!data.results || data.results.length === 0) {
-      showToast("Город не найден");
-      $("searchResults").classList.remove("show");
+    if (!data.results?.length) {
+      toast("Город не найден");
       return;
     }
 
-    const results = data.results;
-
-    $("searchResults").innerHTML = results.map((city, i) => `
+    $("searchResults").innerHTML = data.results.map((c, i) => `
       <button class="search-result" data-index="${i}">
-        <strong>${city.name}</strong>
-        <span style="color:#8996aa">
-          — ${city.admin1 || ""} ${city.country || ""}
-        </span>
+        ${c.name}, ${c.country || ""}
       </button>
     `).join("");
 
@@ -256,102 +173,311 @@ async function searchCity() {
 
     $("searchResults").querySelectorAll("button").forEach(button => {
       button.addEventListener("click", () => {
-        const city = results[Number(button.dataset.index)];
-
-        currentCity = {
-          name: city.name,
-          country: city.country,
-          latitude: city.latitude,
-          longitude: city.longitude
+        const c = data.results[Number(button.dataset.index)];
+        city = {
+          name:c.name,
+          latitude:c.latitude,
+          longitude:c.longitude
         };
-
-        $("cityInput").value = "";
         $("searchResults").classList.remove("show");
-
+        $("cityInput").value = "";
         loadWeather();
       });
     });
-
-  } catch (error) {
-    showToast("Не удалось выполнить поиск");
+  } catch {
+    toast("Ошибка поиска города");
   } finally {
     $("searchBtn").disabled = false;
-    $("searchBtn").textContent = "Найти";
   }
-}
-
-function getLocation() {
-  if (!navigator.geolocation) {
-    showToast("Геолокация не поддерживается");
-    return;
-  }
-
-  showToast("Определяем местоположение...");
-
-  navigator.geolocation.getCurrentPosition(
-    async position => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-
-      try {
-        const response = await fetch(
-          `${GEO}?name=${lat},${lon}&count=1&language=ru&format=json`
-        );
-
-        const data = await response.json();
-        const city = data.results?.[0];
-
-        currentCity = {
-          name: city?.name || "Моё местоположение",
-          country: city?.country || "",
-          latitude: lat,
-          longitude: lon
-        };
-
-      } catch {
-        currentCity = {
-          name: "Моё местоположение",
-          country: "",
-          latitude: lat,
-          longitude: lon
-        };
-      }
-
-      loadWeather();
-    },
-    error => {
-      showToast("Разреши доступ к геолокации");
-    },
-    {
-      enableHighAccuracy: false,
-      timeout: 12000
-    }
-  );
 }
 
 $("searchBtn").addEventListener("click", searchCity);
-
-$("cityInput").addEventListener("keydown", event => {
-  if (event.key === "Enter") searchCity();
+$("cityInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") searchCity();
 });
 
-$("locationBtn").addEventListener("click", getLocation);
+$("locationBtn").addEventListener("click", () => {
+  if (!navigator.geolocation) return toast("Геолокация недоступна");
+
+  navigator.geolocation.getCurrentPosition(
+    async position => {
+      city = {
+        name:"Моё местоположение",
+        latitude:position.coords.latitude,
+        longitude:position.coords.longitude
+      };
+      loadWeather();
+    },
+    () => toast("Разреши доступ к местоположению")
+  );
+});
 
 $("unitBtn").addEventListener("click", () => {
   celsius = !celsius;
   $("unitBtn").textContent = celsius ? "°C" : "°F";
-
-  if (weatherData) {
+  if (weather) {
     renderCurrent();
     renderHourly();
     renderDaily();
   }
 });
 
-document.addEventListener("click", event => {
-  if (!event.target.closest(".search-wrap")) {
+// ПОДПИСКА
+
+$("subscribeBtn").addEventListener("click", () => {
+  openModal(
+    "ATMOS PREMIUM",
+    "Стоимость подписки — 6 599 ₽. Это демонстрационная версия оформления заказа. Реальное списание средств не производится.",
+    "Посмотреть предложение"
+  );
+});
+
+// СЛУЧАЙНАЯ РЕКЛАМА
+
+const advertisements = [
+  {
+    icon:"✈️",
+    title:"Время отправляться в путешествие",
+    text:"Открой новые города и направления.",
+    action:"О путешествиях"
+  },
+  {
+    icon:"☕",
+    title:"Согрей свой день",
+    text:"Найди уютное место для отдыха.",
+    action:"Посмотреть места"
+  },
+  {
+    icon:"🎧",
+    title:"Твоя музыка — твоя атмосфера",
+    text:"Создай настроение для любой погоды.",
+    action:"Подробнее"
+  },
+  {
+    icon:"🏨",
+    title:"Найди место для отдыха",
+    text:"Посмотри варианты размещения для поездки.",
+    action:"Посмотреть"
+  },
+  {
+    icon:"🎟️",
+    title:"Не пропускай события",
+    text:"Выбирай мероприятия и планируй выходные.",
+    action:"К событиям"
+  }
+];
+
+const ad = advertisements[
+  Math.floor(Math.random() * advertisements.length)
+];
+
+$("adIcon").textContent = ad.icon;
+$("adTitle").textContent = ad.title;
+$("adText").textContent = ad.text;
+$("adBtn").textContent = ad.action + " ↗";
+
+$("adBtn").addEventListener("click", () => {
+  openModal("Рекламное предложение", ad.text,
+    "Рекламный переход в демоверсии");
+});
+
+// ОЦЕНКА ПОГОДЫ
+
+$("weatherRating").querySelectorAll("button").forEach(button => {
+  button.addEventListener("click", () => {
+    rating = Number(button.dataset.rating);
+
+    $("weatherRating").querySelectorAll("button")
+      .forEach(b => b.classList.toggle("selected", b === button));
+  });
+});
+
+$("weatherTags").querySelectorAll("button").forEach(button => {
+  button.addEventListener("click", () => {
+    const tag = button.dataset.tag;
+
+    if (selectedTags.includes(tag)) {
+      selectedTags = selectedTags.filter(t => t !== tag);
+      button.classList.remove("selected");
+    } else {
+      selectedTags.push(tag);
+      button.classList.add("selected");
+    }
+  });
+});
+
+$("sendWeather").addEventListener("click", () => {
+  if (!rating && !selectedTags.length && !$("weatherComment").value.trim()) {
+    return toast("Сначала добавь оценку или наблюдение");
+  }
+
+  const report = {
+    city:city.name,
+    rating,
+    tags:selectedTags,
+    comment:$("weatherComment").value,
+    date:new Date().toISOString()
+  };
+
+  const reports = JSON.parse(
+    localStorage.getItem("atmosWeatherReports") || "[]"
+  );
+
+  reports.push(report);
+  localStorage.setItem("atmosWeatherReports", JSON.stringify(reports));
+
+  $("feedbackStatus").textContent =
+    "Спасибо! Наблюдение сохранено на этом устройстве.";
+
+  rating = 0;
+  selectedTags = [];
+  $("weatherComment").value = "";
+
+  $("weatherRating").querySelectorAll("button")
+    .forEach(b => b.classList.remove("selected"));
+
+  $("weatherTags").querySelectorAll("button")
+    .forEach(b => b.classList.remove("selected"));
+});
+
+// БИЛЕТЫ
+
+const events = [
+  {
+    icon:"🎵",
+    name:"Музыкальный вечер",
+    description:"Концерт и живое выступление",
+    price:1500
+  },
+  {
+    icon:"🏒",
+    name:"Хоккейный матч",
+    description:"Спортивное событие",
+    price:900
+  },
+  {
+    icon:"🎭",
+    name:"Театральный вечер",
+    description:"Спектакль на большой сцене",
+    price:1200
+  },
+  {
+    icon:"🎬",
+    name:"Киносеанс",
+    description:"Большой экран и новые фильмы",
+    price:650
+  }
+];
+
+$("eventsList").innerHTML = events.map((event, index) => `
+  <div class="event-card">
+    <div class="event-icon">${event.icon}</div>
+    <h3>${event.name}</h3>
+    <p>${event.description}</p>
+    <strong>${event.price.toLocaleString("ru-RU")} ₽</strong>
+    <button class="primary-btn ticket-btn" data-index="${index}">
+      Выбрать билет
+    </button>
+  </div>
+`).join("");
+
+document.querySelectorAll(".ticket-btn").forEach(button => {
+  button.addEventListener("click", () => {
+    const event = events[Number(button.dataset.index)];
+
+    openModal(
+      event.name,
+      `Стоимость билета: ${event.price} ₽. Это демонстрационный заказ. Билет не выпущен, оплата не производится.`,
+      "Подтвердить выбор"
+    );
+  });
+});
+
+// ТАКСИ
+
+$("taxiBtn").addEventListener("click", () => {
+  const from = $("taxiFrom").value.trim();
+  const to = $("taxiTo").value.trim();
+
+  if (!from || !to) return toast("Укажи оба адреса");
+
+  const multiplier = Number($("taxiClass").value);
+  const estimated = Math.round((250 + Math.random() * 350) * multiplier);
+
+  $("taxiResult").textContent =
+    `Предварительная стоимость: ${estimated.toLocaleString("ru-RU")} ₽. Демонстрационный расчёт, водитель не вызван.`;
+
+  saveAction("taxi", {from,to,estimated});
+});
+
+// ДОСТАВКА
+
+$("deliveryBtn").addEventListener("click", () => {
+  const address = $("deliveryAddress").value.trim();
+  const type = $("deliveryType").value;
+
+  if (!address) return toast("Укажи адрес доставки");
+
+  const price = {
+    "Документы":250,
+    "Продукты":350,
+    "Посылка":400,
+    "Еда":200
+  }[type];
+
+  $("deliveryResult").textContent =
+    `Предварительная стоимость: ${price} ₽. Заявка не отправлена курьеру.`;
+
+  saveAction("delivery", {address,type,price});
+});
+
+// СОХРАНЕНИЕ ДЕЙСТВИЙ
+
+function saveAction(type, data) {
+  const actions = JSON.parse(
+    localStorage.getItem("atmosActions") || "[]"
+  );
+
+  actions.push({
+    type,
+    data,
+    date:new Date().toISOString()
+  });
+
+  localStorage.setItem("atmosActions", JSON.stringify(actions));
+}
+
+// МОДАЛЬНОЕ ОКНО
+
+function openModal(title, text, action) {
+  $("modalTitle").textContent = title;
+  $("modalText").textContent = text;
+  $("modalAction").textContent = action;
+  $("modal").classList.add("show");
+}
+
+function closeModal() {
+  $("modal").classList.remove("show");
+}
+
+$("closeModal").addEventListener("click", closeModal);
+
+$("modal").addEventListener("click", e => {
+  if (e.target === $("modal")) closeModal();
+});
+
+$("modalAction").addEventListener("click", () => {
+  closeModal();
+  toast("Это демонстрационная функция ATMOS");
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-wrap")) {
     $("searchResults").classList.remove("show");
   }
 });
 
+// ЗАПУСК
+
 loadWeather();
+
